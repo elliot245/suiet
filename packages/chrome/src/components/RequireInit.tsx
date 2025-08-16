@@ -20,10 +20,12 @@ function RequireInit({ children }: any) {
     }
 
     // if current network is not in featureFlags.available_networks, switch to default network
+    // but always allow localnet as it's a valid development network
     if (
       featureFlags &&
       isNonEmptyArray(featureFlags?.available_networks) &&
-      !featureFlags.available_networks.includes(appContext.networkId)
+      !featureFlags.available_networks.includes(appContext.networkId) &&
+      appContext.networkId !== 'localnet'
     ) {
       await dispatch(updateNetworkId(defaultNetwork));
     }

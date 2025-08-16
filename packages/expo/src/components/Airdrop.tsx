@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import Toast from 'react-native-toast-message';
-import { Gray_100, Gray_500, Primary_400 } from '@/styles/colors';
-import { SvgCoins03 } from '@/components/icons/svgs';
-import Typography from '@/components/Typography';
-import { ToastProps } from '@/components/Toast';
 import { FAB } from '@/components/FAB';
+import { SvgCoins03 } from '@/components/icons/svgs';
+import { ToastProps } from '@/components/Toast';
+import Typography from '@/components/Typography';
 import { useNetwork } from '@/hooks/useNetwork';
+import { Gray_100, Gray_500, Primary_400 } from '@/styles/colors';
 import { useFeatureFlags } from '@suiet/chrome-ext/src/hooks/useFeatureFlags';
+import React, { useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export const Airdrop: React.FC<{ recipient: string }> = ({ recipient }) => {
   const featureFlags = useFeatureFlags();
   const { network, networkId } = useNetwork(featureFlags);
-  const faucetApi = network?.faucet_api;
+  const faucetApi = network?.faucetApi;
 
   const t = new Date();
   const [airdropTime, setAirdropTime] = useState(t.setTime(t.getTime() - 5000));

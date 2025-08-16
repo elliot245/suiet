@@ -1,22 +1,22 @@
-import styles from './index.module.scss';
-import { Link } from 'react-router-dom';
-import { Modal } from '../../../components/modals';
-import WaterDropIcon from '../../../components/WaterDropIcon';
-import Typo from '../../../components/Typo';
-import QRCodeSVG from 'qrcode.react';
-import classnames from 'classnames';
-import Address from '../../../components/Address';
-import Skeleton from 'react-loading-skeleton';
-import { formatCurrency, formatSUI } from '@suiet/core';
-import message from '../../../components/message';
-import { useEffect, useState } from 'react';
-import { LoadingSpokes } from '../../../components/Loading';
-import Banner from '../Banner';
-import { useFeatureFlagsWithNetwork } from '../../../hooks/useFeatureFlags';
-import useSuiBalance from '../../../hooks/coin/useSuiBalance';
-import useCoins from '../../../hooks/coin/useCoins';
 import { useQuery } from '@apollo/client';
+import { formatCurrency } from '@suiet/core';
+import classnames from 'classnames';
+import QRCodeSVG from 'qrcode.react';
+import { useEffect, useState } from 'react';
+import Skeleton from 'react-loading-skeleton';
+import { Link } from 'react-router-dom';
+import Address from '../../../components/Address';
+import { LoadingSpokes } from '../../../components/Loading';
+import message from '../../../components/message';
+import { Modal } from '../../../components/modals';
+import Typo from '../../../components/Typo';
+import WaterDropIcon from '../../../components/WaterDropIcon';
+import useCoins from '../../../hooks/coin/useCoins';
+import { useFeatureFlagsWithNetwork } from '../../../hooks/useFeatureFlags';
+import { useNetwork } from '../../../hooks/useNetwork';
 import { GET_SUPPORT_SWAP_COINS } from '../../../utils/graphql/query';
+import Banner from '../Banner';
+import styles from './index.module.scss';
 export type ReceiveButtonProps = {
   address: string;
 };
@@ -81,8 +81,11 @@ function MainPage({ address, networkId }: DashboardProps) {
   const [airdropTime, setAirdropTime] = useState(t.setTime(t.getTime() - 5000));
   const [airdropLoading, setAirdropLoading] = useState(false);
   const featureFlags = useFeatureFlagsWithNetwork();
+  const { data: networkConfig } = useNetwork(networkId);
   const faucetApi =
-    featureFlags?.faucet_api ?? `https://faucet.${networkId}.sui.io/gas`;
+    featureFlags?.faucet_api ?? 
+    networkConfig?.faucet_api ??
+    `https://faucet.${networkId}.sui.io/gas`;
 
   // preload swap data
   useQuery(GET_SUPPORT_SWAP_COINS, {

@@ -56,10 +56,29 @@
       "stake_gas_budget": 20000000,
       "faucet_api": "https://faucet.testnet.sui.io/gas",
       "sample_nft_object_id": "0x5ea6aafe995ce6506f07335a40942024106a57f6311cb341239abf2c3ac7b82f"
+    },
+    "localnet": {
+      "version_cache_timout_in_seconds": 10,
+      "enable_staking": true,
+      "enable_buy_crypto": false,
+      "enable_mint_example_nft": true,
+      "enable_swap": true,
+      "cetus_partner_id": null,
+      "full_node_url": "http://127.0.0.1:9000",
+      "explorer_url": "https://explorer.testnet.sui.io",
+      "graphql_url": "http://127.0.0.1:9125",
+      "on_maintenance": false,
+      "pay_coin_gas_budget": 2000000,
+      "move_call_gas_budget": 20000000,
+      "mint_example_nft_gas_budget": 10000,
+      "transfer_object_gas_budget": 1000,
+      "stake_gas_budget": 20000000,
+      "faucet_api": "http://127.0.0.1:9123/gas",
+      "sample_nft_object_id": "0x5ea6aafe995ce6506f07335a40942024106a57f6311cb341239abf2c3ac7b82f"   
     }
   },
   "require_update_browser": false,
-  "available_networks": ["mainnet", "testnet", "devnet"],
+  "available_networks": ["mainnet", "testnet", "devnet", "localnet"],
   "default_network": "mainnet",
   "campaign": null,
   "minimal_versions": {

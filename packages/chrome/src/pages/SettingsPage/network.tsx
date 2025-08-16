@@ -19,6 +19,8 @@ import { ReactComponent as IconTestnetSelected } from '../../assets/icons/testne
 import { ReactComponent as IconTestnetUnselected } from '../../assets/icons/testnet-unselected.svg';
 import { ReactComponent as IconMainnetSelected } from '../../assets/icons/mainnet-selected.svg';
 import { ReactComponent as IconMainnetUnselected } from '../../assets/icons/mainnet-unselected.svg';
+import { ReactComponent as IconLocalnetSelected } from '../../assets/icons/localnet-selected.svg';
+import { ReactComponent as IconLocalnetUnselected } from '../../assets/icons/localnet-unselected.svg';
 // import { ReactComponent as IconMainnet } from '../../assets/icons/mainnet.svg';
 import { RootState } from '../../store';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
@@ -38,8 +40,8 @@ const networks: Record<
   mainnet: {
     name: 'Mainnet',
     icon: {
-      selected: <IconTestnetSelected />,
-      unselected: <IconTestnetUnselected />,
+      selected: <IconMainnetSelected />,
+      unselected: <IconMainnetUnselected />,
     },
   },
   testnet: {
@@ -49,12 +51,18 @@ const networks: Record<
       unselected: <IconTestnetUnselected />,
     },
   },
-
   devnet: {
     name: 'Devnet',
     icon: {
       selected: <IconDevnetSelected />,
       unselected: <IconDevnetUnselected />,
+    },
+  },
+  localnet: {
+    name: 'Localnet',
+    icon: {
+      selected: <IconLocalnetSelected />,
+      unselected: <IconLocalnetUnselected />,
     },
   },
 };
@@ -72,16 +80,22 @@ function Network() {
       !featureFlags.networks ||
       !isNonEmptyArray(featureFlags.available_networks)
     ) {
-      return ['devnet'];
+      return ['devnet', 'localnet'];
     }
     const orderMap: Record<string, number> = {
       mainnet: 1,
       testnet: 2,
       devnet: 3,
+      localnet: 4,
     };
 
-    // reorder network options
-    return featureFlags.available_networks
+    // reorder network options and always include localnet
+    const availableNetworks = [...featureFlags.available_networks];
+    if (!availableNetworks.includes('localnet')) {
+      availableNetworks.push('localnet');
+    }
+
+    return availableNetworks
       .map((networkName) => {
         return {
           order: orderMap[networkName] ?? 999,
@@ -92,7 +106,7 @@ function Network() {
       .map((item) => item.network);
   }, [featureFlags]);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (networkId === network) {
       setTimeout(() => {
         message.info(`You are in ${network}`);
@@ -101,7 +115,7 @@ function Network() {
       return;
     }
 
-    await dispatch(updateNetworkId(network));
+    dispatch(updateNetworkId(network));
     // avoid toast flashing after navigation
     setTimeout(() => {
       message.success(`Switched to ${network}`);

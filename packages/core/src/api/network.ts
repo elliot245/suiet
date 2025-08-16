@@ -11,6 +11,7 @@ export type Network = {
   enableStaking?: boolean;
   enableSwap?: boolean;
   enableBuyCrypto?: boolean;
+  faucet_api?: string;
 };
 
 export interface INetworkApi {
@@ -60,6 +61,18 @@ const DEFAULT_NETWORKS = new Map([
       name: 'local',
       queryRpcUrl: 'http://localhost:5001',
       txRpcUrl: 'http://localhost:5001',
+      versionCacheTimoutInSeconds: 0,
+    },
+  ],
+  [
+    'localnet',
+    {
+      id: 'localnet',
+      name: 'localnet',
+      queryRpcUrl: 'http://127.0.0.1:9000',
+      txRpcUrl: 'http://127.0.0.1:9000',
+      graphqlUrl: 'http://127.0.0.1:9125',
+      faucet_api: 'http://127.0.0.1:9123/gas',
       versionCacheTimoutInSeconds: 0,
     },
   ],

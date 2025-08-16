@@ -1,7 +1,7 @@
 import { Network } from '@suiet/core';
-import { useFeatureFlags } from './useFeatureFlags';
 import { useMemo } from 'react';
 import { isNonEmptyArray } from '../utils/check';
+import { useFeatureFlags } from './useFeatureFlags';
 
 const DEFAULT_NETWORKS = new Map([
   [
@@ -37,6 +37,18 @@ const DEFAULT_NETWORKS = new Map([
       versionCacheTimoutInSeconds: 0,
     },
   ],
+  [
+    'localnet',
+    {
+      id: 'localnet',
+      name: 'localnet',
+      queryRpcUrl: 'http://127.0.0.1:9000',
+      txRpcUrl: 'http://127.0.0.1:9000',
+      graphqlUrl: 'http://127.0.0.1:9125',
+      faucet_api: 'http://127.0.0.1:9123/gas',
+      versionCacheTimoutInSeconds: 0,
+    },
+  ],
 ]);
 
 function trimUndefinedValue(obj: Record<string, any>) {
@@ -65,7 +77,11 @@ export function useNetwork(networkId: string) {
       return defaultNetwork;
     }
     const currentNetworkConfig = featureFlags.networks[networkId];
+    // For localnet, always use the default configuration if not found in feature flags
     if (!currentNetworkConfig?.full_node_url) {
+      if (networkId === 'localnet') {
+        return defaultNetwork;
+      }
       return defaultNetwork;
     }
 

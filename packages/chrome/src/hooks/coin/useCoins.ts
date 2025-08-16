@@ -1,6 +1,6 @@
 import { gql, QueryHookOptions, useLazyQuery, useQuery } from '@apollo/client';
-import { useCallback, useMemo } from 'react';
 import { LazyQueryHookOptions } from '@apollo/client/react/types/types';
+import { useCallback, useMemo } from 'react';
 
 export interface CoinDto {
   type: string;
@@ -20,37 +20,71 @@ export type CoinBalance = {
 };
 
 const GET_COINS_GQL = gql`
-  query getCoins($address: Address!) {
-    coins(address: $address) {
-      type
-      balance
-      symbol
-      isVerified
-      iconURL
-      usd
-      pricePercentChange24h
-      metadata {
-        decimals
-        wrappedChain
-        bridge
+  query getCoins($address: SuiAddress!) {
+    address(address: $address) {
+      balances {
+        nodes {
+          coinType {
+            repr
+          }
+          totalBalance
+          coinObjectCount
+        }
+      }
+      coins {
+        nodes {
+          coinBalance
+          contents {
+            json
+            type {
+              repr
+            }
+          }
+        }
       }
     }
   }
 `;
 
-function formatCoinFromGql(coin: any): CoinDto {
+function formatCoinFromGql(balanceNode: any, coinData?: any): CoinDto {
+  const coinType = balanceNode.coinType.repr;
+  
+  // Extract symbol from coin type (e.g., "0x2::sui::SUI" -> "SUI")
+  const symbolMatch = coinType.match(/:([^:]+)$/);
+  const symbol = symbolMatch ? symbolMatch[1].toUpperCase() : 'UNKNOWN';
+  
+  // For now, we'll use default values for missing metadata
+  // In a real implementation, you might want to fetch this from a separate source
+  const isVerified = coinType.startsWith('0x2::sui::SUI') || coinType.startsWith('0x2::');
+  
   return {
-    type: coin.type,
-    symbol: coin.symbol,
-    balance: coin.balance,
-    isVerified: coin.isVerified,
-    decimals: coin.metadata?.decimals ?? 0,
-    iconURL: coin.iconURL,
-    usd: coin.usd,
-    pricePercentChange24h: coin.pricePercentChange24h,
-    wrappedChain: coin.metadata.wrappedChain,
-    bridge: coin.metadata.bridge,
+    type: coinType,
+    symbol: symbol,
+    balance: balanceNode.totalBalance,
+    isVerified: isVerified,
+    decimals: getDefaultDecimals(coinType),
+    iconURL: getDefaultIconURL(coinType),
+    usd: null, // Would need additional API call to get USD value
+    pricePercentChange24h: null,
+    wrappedChain: null,
+    bridge: null,
   };
+}
+
+function getDefaultDecimals(coinType: string): number {
+  // SUI has 9 decimals, most others default to 6
+  if (coinType.includes('::sui::SUI')) {
+    return 9;
+  }
+  return 6;
+}
+
+function getDefaultIconURL(coinType: string): string | null {
+  // Return default icon for SUI, null for others
+  if (coinType.includes('::sui::SUI')) {
+    return 'https://sui.io/sui-icon.svg'; // You might want to use a local asset
+  }
+  return null;
 }
 /**
  * get coins
@@ -59,7 +93,7 @@ function formatCoinFromGql(coin: any): CoinDto {
  */
 export default function useCoins(address: string, options?: QueryHookOptions) {
   const { pollInterval = 5 * 1000, ...restOptions } = options || {};
-  const { data, ...rest } = useQuery<{ coins: CoinDto[] }>(GET_COINS_GQL, {
+  const { data, ...rest } = useQuery(GET_COINS_GQL, {
     variables: {
       address,
     },
@@ -67,10 +101,16 @@ export default function useCoins(address: string, options?: QueryHookOptions) {
     skip: !address,
     ...restOptions,
   });
-  const formattedData = useMemo(
-    () => data?.coins?.map(formatCoinFromGql) ?? [],
-    [data]
-  );
+  
+  const formattedData = useMemo(() => {
+    if (!data?.address?.balances?.nodes) {
+      return [];
+    }
+    
+    return data.address.balances.nodes
+      .filter((balanceNode: any) => balanceNode.totalBalance !== '0')
+      .map((balanceNode: any) => formatCoinFromGql(balanceNode));
+  }, [data]);
 
   // reference by coin type
   const coinMap = useMemo(() => {
@@ -103,14 +143,25 @@ export default function useCoins(address: string, options?: QueryHookOptions) {
 }
 
 export function useCoinsLazyQuery(options?: LazyQueryHookOptions) {
-  const [getCoins, { data, ...rest }] = useLazyQuery<{ coins: CoinDto[] }>(
+  const [getCoins, { data, ...rest }] = useLazyQuery(
     GET_COINS_GQL,
     options
   );
+  
+  const formattedData = useMemo(() => {
+    if (!data?.address?.balances?.nodes) {
+      return [];
+    }
+    
+    return data.address.balances.nodes
+      .filter((balanceNode: any) => balanceNode.totalBalance !== '0')
+      .map((balanceNode: any) => formatCoinFromGql(balanceNode));
+  }, [data]);
+  
   return [
     getCoins,
     {
-      data: data?.coins?.map(formatCoinFromGql) ?? [],
+      data: formattedData,
       ...rest,
     },
   ] as const;
